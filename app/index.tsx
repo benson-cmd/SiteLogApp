@@ -1,11 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext'; 
 
 const THEME = {
-  primary: '#C69C6D', // 金色
+  primary: '#C69C6D',
   background: '#ffffff',
   card: '#ffffff',
   text: '#002147',
@@ -29,7 +28,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     setTimeout(async () => {
-      // 這裡模擬登入成功
+      // 模擬登入成功
       if ((email === 'admin' && password === 'admin') || (email && password)) {
         await login(email, password); 
         router.replace('/projects');
@@ -44,9 +43,14 @@ export default function LoginScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* 1. Logo 區域：使用金色 Icon 確保顯示 */}
+        {/* 1. Logo 區域：改回使用圖片 */}
         <View style={styles.logoArea}>
-          <Ionicons name="business" size={80} color={THEME.primary} style={{ marginBottom: 10 }} />
+          {/* 請確保 assets 資料夾內有 logo.png，如果檔名不同請自行修改 */}
+          <Image 
+            source={require('../assets/logo.png')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.logoText}>DW工程日誌系統</Text>
         </View>
 
@@ -95,6 +99,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: THEME.background },
   scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   logoArea: { alignItems: 'center', marginBottom: 40 },
+  // 設定 Logo 圖片大小
+  logoImage: { width: 120, height: 120, marginBottom: 15 },
   logoText: { fontSize: 32, fontWeight: 'bold', color: THEME.text },
   card: { 
     backgroundColor: THEME.card, padding: 30, borderRadius: 16, 
