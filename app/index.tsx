@@ -1,14 +1,14 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext'; 
 
 const THEME = {
-  primary: '#C69C6D',
+  primary: '#C69C6D', // 金色
   background: '#ffffff',
   card: '#ffffff',
   text: '#002147',
-  textSec: '#666666',
   inputBg: '#F5F5F5',
   border: '#E0E0E0'
 };
@@ -23,14 +23,13 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      if (Platform.OS === 'web') alert('請輸入帳號與密碼');
-      else Alert.alert('錯誤', '請輸入帳號與密碼');
+      alert('請輸入帳號與密碼');
       return;
     }
 
     setLoading(true);
     setTimeout(async () => {
-      // 修正：這裡傳入兩個參數 (email 和 password)
+      // 這裡模擬登入成功
       if ((email === 'admin' && password === 'admin') || (email && password)) {
         await login(email, password); 
         router.replace('/projects');
@@ -41,46 +40,52 @@ export default function LoginScreen() {
     }, 500);
   };
 
-  const handleRegister = () => {
-    router.push('/register');
-  };
-
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        {/* 1. Logo 區域：使用金色 Icon 確保顯示 */}
         <View style={styles.logoArea}>
+          <Ionicons name="business" size={80} color={THEME.primary} style={{ marginBottom: 10 }} />
           <Text style={styles.logoText}>DW工程日誌系統</Text>
         </View>
+
         <View style={styles.card}>
           <Text style={styles.label}>帳號 (Email)</Text>
           <TextInput 
             style={styles.input} 
-            placeholder="請輸入帳號 (admin)" 
+            placeholder="請輸入帳號" 
             placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
           />
+
           <Text style={styles.label}>密碼</Text>
           <TextInput 
             style={styles.input} 
-            placeholder="請輸入密碼 (admin)" 
+            placeholder="請輸入密碼"
             placeholderTextColor="#999"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
+
           <TouchableOpacity style={styles.btn} onPress={handleLogin} disabled={loading}>
             <Text style={styles.btnText}>{loading ? '登入中...' : '登入系統'}</Text>
           </TouchableOpacity>
+
           <TouchableOpacity onPress={() => alert('請聯絡管理員重設密碼')}>
             <Text style={styles.forgot}>忘記密碼？</Text>
           </TouchableOpacity>
+
           <View style={styles.divider} />
-          <TouchableOpacity onPress={handleRegister} style={styles.registerContainer}>
+
+          <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerContainer}>
             <Text style={styles.registerText}>沒有帳號？申請註冊</Text>
           </TouchableOpacity>
         </View>
+
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -90,29 +95,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: THEME.background },
   scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   logoArea: { alignItems: 'center', marginBottom: 40 },
-  logoText: { fontSize: 32, fontWeight: 'bold', color: THEME.text, marginTop: 10 },
+  logoText: { fontSize: 32, fontWeight: 'bold', color: THEME.text },
   card: { 
-    backgroundColor: THEME.card, 
-    padding: 30, 
-    borderRadius: 16, 
-    shadowColor: '#000', 
-    shadowOpacity: 0.1, 
-    shadowRadius: 10, 
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#f0f0f0'
+    backgroundColor: THEME.card, padding: 30, borderRadius: 16, 
+    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 5 },
+    elevation: 5, borderWidth: 1, borderColor: '#f0f0f0'
   },
   label: { fontWeight: 'bold', marginBottom: 8, color: '#333', fontSize: 16 },
   input: { 
-    backgroundColor: THEME.inputBg, 
-    padding: 15, 
-    borderRadius: 8, 
-    marginBottom: 20, 
-    fontSize: 16, 
-    borderWidth: 1, 
-    borderColor: THEME.border,
-    color: '#000'
+    backgroundColor: THEME.inputBg, padding: 15, borderRadius: 8, marginBottom: 20, fontSize: 16, 
+    borderWidth: 1, borderColor: THEME.border, color: '#000' 
   },
   btn: { backgroundColor: THEME.primary, padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 },
   btnText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },

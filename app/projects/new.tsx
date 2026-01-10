@@ -1,85 +1,198 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Alert } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { useState } from 'react';
 
 const THEME = {
-  primary: '#C69C6D',       // 金色
-  background: '#F5F7FA',    // 淺灰底
-  headerBg: '#002147',      // 深藍色
+  primary: '#C69C6D',
+  background: '#F5F7FA',
+  headerBg: '#002147',
+  sectionBg: '#FFF5E6', // 淺橘色標題底
   card: '#ffffff',
-  text: '#333'
+  text: '#333',
+  border: '#E0E0E0'
 };
 
 export default function NewProjectScreen() {
   const router = useRouter();
+
+  // 表單狀態
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [manager, setManager] = useState('');
+  const [manager, setManager] = useState(''); // 工地主任
+  const [status, setStatus] = useState('未開工');
+  const [progress, setProgress] = useState('0');
+  
+  // 日期欄位 (暫時用文字輸入，避免 DatePicker 套件相容性問題)
+  const [startDate, setStartDate] = useState('');
+  const [contractDays, setContractDays] = useState('');
+  const [type, setType] = useState('日曆天'); // 工期類型
+
+  // 預設選項
+  const managers = ['吳資彬', '現場工程師'];
+  const statusOptions = ['未開工', '已開工未進場', '施工中', '完工待驗收', '驗收中', '結案'];
+  const typeOptions = ['日曆天', '工作天'];
 
   const handleSave = () => {
-    // 簡單驗證
     if (!name || !manager) {
-      if (Platform.OS === 'web') alert('請填寫專案名稱與主任');
-      else Alert.alert('提示', '請填寫專案名稱與主任');
+      alert('請填寫專案名稱與工地主任');
       return;
     }
-
-    // 這裡未來會連接資料庫，現在先模擬成功
-    if (Platform.OS === 'web') alert('新增成功！(測試)');
-    else Alert.alert('成功', '專案已建立');
-    
-    // 回到上一頁
+    // 這裡未來會連接資料庫
     router.back();
   };
 
+  // 渲染分區標題
+  const SectionHeader = ({ title }: { title: string }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      {/* 設定這一頁的標題欄 */}
       <Stack.Screen 
         options={{
           title: '新增專案',
           headerStyle: { backgroundColor: THEME.headerBg },
           headerTintColor: '#fff',
-          headerBackTitle: '返回',
-          headerShown: true // 確保這裡顯示標題列
+          headerShown: true
         }} 
       />
 
       <ScrollView contentContainerStyle={styles.form}>
+        
+        {/* 基本資料 */}
         <View style={styles.card}>
-          <Text style={styles.title}>基本資料</Text>
+          <SectionHeader title="基本資料" />
           
-          <Text style={styles.label}>專案名稱 *</Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="例如：台中七期商辦大樓" 
-            placeholderTextColor="#999"
-            value={name}
-            onChangeText={setName}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>專案名稱 *</Text>
+            <TextInput 
+              style={styles.input} 
+              placeholder="例如：台中七期商辦大樓" 
+              value={name} onChangeText={setName} 
+            />
+          </View>
 
-          <Text style={styles.label}>工地地址</Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="例如：台中市西屯區..." 
-            placeholderTextColor="#999"
-            value={address}
-            onChangeText={setAddress}
-          />
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>工地地址</Text>
+            <TextInput 
+              style={styles.input} 
+              placeholder="例如：台中市西屯區..." 
+              value={address} onChangeText={setAddress} 
+            />
+          </View>
 
-          <Text style={styles.label}>工地主任 *</Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="請輸入姓名" 
-            placeholderTextColor="#999"
-            value={manager}
-            onChangeText={setManager}
-          />
-
-          <TouchableOpacity style={styles.btn} onPress={handleSave}>
-            <Text style={styles.btnText}>確認新增</Text>
-          </TouchableOpacity>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>工地主任 *</Text>
+            <View style={styles.chipContainer}>
+              {managers.map((m) => (
+                <TouchableOpacity 
+                  key={m} 
+                  style={[styles.chip, manager === m && styles.chipSelected]}
+                  onPress={() => setManager(m)}
+                >
+                  <Text style={[styles.chipText, manager === m && styles.chipTextSelected]}>{m}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </View>
+
+        {/* 狀態與進度 */}
+        <View style={styles.card}>
+          <SectionHeader title="狀態與進度" />
+          
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>施工狀態</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+              {statusOptions.map((s) => (
+                <TouchableOpacity 
+                  key={s} 
+                  style={[styles.chip, status === s && styles.chipSelected]}
+                  onPress={() => setStatus(s)}
+                >
+                  <Text style={[styles.chipText, status === s && styles.chipTextSelected]}>{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>目前進度 (%)</Text>
+            <TextInput 
+              style={styles.input} 
+              keyboardType="numeric"
+              value={progress} onChangeText={setProgress} 
+            />
+          </View>
+        </View>
+
+        {/* 契約與工期 */}
+        <View style={styles.card}>
+          <SectionHeader title="契約與工期" />
+          
+          <View style={styles.row}>
+            <View style={styles.halfField}>
+              <Text style={styles.label}>決標日期</Text>
+              <TextInput style={styles.input} placeholder="年/月/日" />
+            </View>
+            <View style={styles.halfField}>
+              <Text style={styles.label}>開工日期 *</Text>
+              <TextInput 
+                style={styles.input} placeholder="年/月/日"
+                value={startDate} onChangeText={setStartDate}
+              />
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={styles.halfField}>
+              <Text style={styles.label}>契約工期 (天) *</Text>
+              <TextInput 
+                style={styles.input} placeholder="天數"
+                value={contractDays} onChangeText={setContractDays}
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={styles.halfField}>
+              <Text style={styles.label}>工期類型</Text>
+              <View style={styles.chipContainer}>
+                {typeOptions.map((t) => (
+                  <TouchableOpacity 
+                    key={t} 
+                    style={[styles.chip, type === t && styles.chipSelected]}
+                    onPress={() => setType(t)}
+                  >
+                    <Text style={[styles.chipText, type === t && styles.chipTextSelected]}>{t}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* 驗收結束 (選填) */}
+        <View style={styles.card}>
+          <SectionHeader title="驗收結束 (選填)" />
+          
+          <View style={styles.row}>
+            <View style={styles.halfField}>
+              <Text style={styles.label}>實際竣工日</Text>
+              <TextInput style={styles.input} placeholder="年/月/日" />
+            </View>
+            <View style={styles.halfField}>
+              <Text style={styles.label}>驗收日期</Text>
+              <TextInput style={styles.input} placeholder="年/月/日" />
+            </View>
+          </View>
+        </View>
+
+        {/* 送出按鈕 */}
+        <TouchableOpacity style={styles.submitBtn} onPress={handleSave}>
+          <Text style={styles.submitBtnText}>確認新增</Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </View>
   );
@@ -87,23 +200,54 @@ export default function NewProjectScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: THEME.background },
-  form: { padding: 20 },
+  form: { padding: 15, paddingBottom: 50 },
   card: {
     backgroundColor: THEME.card,
-    padding: 25,
-    borderRadius: 12,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, elevation: 2
+    borderRadius: 8,
+    marginBottom: 20,
+    overflow: 'hidden',
+    borderWidth: 1, borderColor: '#eee'
   },
-  title: { fontSize: 20, fontWeight: 'bold', color: THEME.headerBg, marginBottom: 20 },
-  label: { fontSize: 16, fontWeight: 'bold', color: '#555', marginBottom: 8 },
+  sectionHeader: {
+    backgroundColor: THEME.sectionBg,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginBottom: 10
+  },
+  sectionTitle: {
+    color: THEME.primary,
+    fontWeight: 'bold',
+    fontSize: 16
+  },
+  fieldGroup: { paddingHorizontal: 15, marginBottom: 15 },
+  label: { fontSize: 14, fontWeight: 'bold', color: '#555', marginBottom: 8 },
   input: {
     backgroundColor: '#F9F9F9',
-    borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8,
-    padding: 12, fontSize: 16, marginBottom: 20, color: '#333'
+    borderWidth: 1, borderColor: THEME.border, borderRadius: 6,
+    padding: 12, fontSize: 16, color: '#333'
   },
-  btn: {
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 15, marginBottom: 15 },
+  halfField: { width: '48%' },
+  
+  // Chip 樣式
+  chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  horizontalScroll: { flexDirection: 'row' },
+  chip: {
+    paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 20, borderWidth: 1, borderColor: '#ddd',
+    backgroundColor: '#fff', marginRight: 8, marginBottom: 5
+  },
+  chipSelected: {
     backgroundColor: THEME.primary,
-    padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10
+    borderColor: THEME.primary
   },
-  btnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
+  chipText: { color: '#666' },
+  chipTextSelected: { color: '#fff', fontWeight: 'bold' },
+
+  // 送出按鈕
+  submitBtn: {
+    backgroundColor: THEME.primary,
+    padding: 16, borderRadius: 8, alignItems: 'center', marginTop: 10
+  },
+  submitBtnText: { color: '#fff', fontSize: 18, fontWeight: 'bold' }
 });
