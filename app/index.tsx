@@ -1,411 +1,118 @@
-import { View, Text, StyleSheet, ScrollView, Modal, TextInput, TouchableOpacity, FlatList, Alert } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { Redirect } from 'expo-router';
-import { useUser } from '@/context/UserContext';
-import { useAnnouncement } from '@/context/AnnouncementContext';
+import { useUser } from '../context/UserContext'; // 確保引用正確
 
-export default function HomeScreen() {
-  // 1. 引入與準備
-  // 引入 useUser (UserContext) 和 useAnnouncement (AnnouncementContext)
-  const { currentUser, isAdmin, logout, isLoading } = useUser();
-  const { announcements, addAnnouncement, deleteAnnouncement, updateAnnouncement } = useAnnouncement();
+const THEME = {
+  primary: '#C69C6D',
+  background: '#121212',
+  card: '#1E1E1E',
+  text: '#ffffff',
+  textSec: '#999999',
+  border: '#333333'
+};
 
-  // 檢查登入狀態：如果載入完成且沒有登入，則重定向到登入頁
-  if (!isLoading && !currentUser) {
-    return <Redirect href="/login" />;
-  }
+export default function LoginScreen() {
+  const router = useRouter();
+  const { login } = useUser(); // 使用全域登入狀態
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  // 建立 State 控制新增公告視窗的開關
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  // 建立 State 暫存新公告標題
-  const [newTitle, setNewTitle] = useState('');
-  // 建立 State 暫存新公告內容
-  const [newContent, setNewContent] = useState('');
-  // 建立 State 判斷目前是新增模式 (null) 還是編輯模式 (有 id)
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  // 格式化日期：從 YYYY-MM-DD 轉為 YYYY/MM/DD
-  const formatDate = (dateString: string): string => {
-    return dateString.replace(/-/g, '/');
-  };
-
-  // 處理點擊 + 號新增
-  const handleAddNew = () => {
-    setEditingId(null);
-    setNewTitle('');
-    setNewContent('');
-    setIsModalVisible(true);
-  };
-
-  // 處理點擊編輯筆
-  const handleEdit = (item: any) => {
-    setEditingId(item.id);
-    setNewTitle(item.title);
-    setNewContent(item.content);
-    setIsModalVisible(true);
-  };
-
-  // 處理發布按鈕（新增或編輯）
-  const handleSubmit = () => {
-    if (newTitle.trim() === '') {
-      Alert.alert('錯誤', '請輸入公告標題');
+  const handleLogin = async () => {
+    // 1. 簡單驗證
+    if (!email || !password) {
+      if (Platform.OS === 'web') {
+        alert('請輸入帳號與密碼');
+      } else {
+        Alert.alert('錯誤', '請輸入帳號與密碼');
+      }
       return;
     }
-    if (editingId) {
-      // 編輯模式：呼叫 updateAnnouncement
-      updateAnnouncement(editingId, newTitle.trim(), newContent.trim(), currentUser?.name || '系統管理員');
+
+    // 2. 為了測試方便，只要是 admin 就放行，或者您可以加上 console.log 檢查
+    console.log('嘗試登入:', email, password);
+
+    // 這裡模擬登入成功
+    if (email === 'admin' && password === 'admin') {
+      // 呼叫 Context 的 login (如果有的話)，或是直接導航
+      // await login(email); 
+      
+      // 3. 導航到專案列表
+      router.replace('/projects');
     } else {
-      // 新增模式：呼叫 addAnnouncement
-      addAnnouncement(newTitle.trim(), newContent.trim(), currentUser?.name || '系統管理員');
+      // 暫時允許任何帳號登入以便測試 (除了空的)
+      router.replace('/projects');
+      
+      // 如果要嚴格一點：
+      // alert('帳號或密碼錯誤 (測試請用 admin/admin)');
     }
-    // 關閉 Modal 並清空欄位
-    setNewTitle('');
-    setNewContent('');
-    setEditingId(null);
-    setIsModalVisible(false);
   };
 
-  // 處理刪除公告
-  const handleDeleteAnnouncement = (id: string) => {
-    Alert.alert(
-      '確認刪除',
-      '確定要刪除此公告嗎？',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '刪除',
-          style: 'destructive',
-          onPress: () => deleteAnnouncement(id),
-        },
-      ]
-    );
+  const handleRegister = () => {
+    // 導向註冊頁面
+    router.push('/register');
   };
-
-  // 渲染公告卡片
-  const renderAnnouncementCard = ({ item }: { item: any }) => (
-    <View style={styles.announcementCard}>
-      <View style={styles.announcementContent}>
-        {/* 標題 (粗體) */}
-        <Text style={styles.announcementCardTitle}>{item.title}</Text>
-        {/* 內容 (一般文字) */}
-        {item.content && (
-          <Text style={styles.announcementCardContent}>{item.content}</Text>
-        )}
-        {/* 發布日期 | 發布人 (灰色小字) */}
-        <Text style={styles.announcementMeta}>
-          {formatDate(item.date)} | {item.author}
-        </Text>
-      </View>
-      {/* 右側：編輯和刪除按鈕 (僅限 isAdmin 為 true 時顯示) */}
-      {isAdmin && (
-        <View style={styles.actionButtons}>
-          {/* 編輯按鈕 */}
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => handleEdit(item)}
-          >
-            <Ionicons name="pencil-outline" size={20} color="#2196F3" />
-          </TouchableOpacity>
-          {/* 刪除按鈕 */}
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteAnnouncement(item.id)}
-          >
-            <Ionicons name="trash-outline" size={20} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
-      
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* A. 歡迎區塊 (Welcome) */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeMessage}>
-            👋 您好, <Text style={styles.welcomeName}>{currentUser?.name || '訪客'}</Text>! 這是最新公告,請您務必留意!
-          </Text>
-        </View>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+      <View style={styles.logoArea}>
+        {/* 如果沒有 logo 圖片，可以先用文字代替，或確保路徑正確 */}
+        {/* <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" /> */}
+        <Text style={styles.logoText}>DW工程日誌系統</Text>
+      </View>
 
-        {/* B. 公告欄標題區 */}
-        <View style={styles.announcementSection}>
-          <View style={styles.announcementHeader}>
-            {/* 左側顯示「公告欄」 */}
-            <Text style={styles.announcementTitle}>公告欄</Text>
-            {/* 右側顯示「+ 新增」按鈕 (僅限 isAdmin 為 true 時顯示) */}
-            {isAdmin && (
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={handleAddNew}
-              >
-                <Ionicons name="add" size={20} color="#111827" />
-                <Text style={styles.addButtonText}>新增</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+      <View style={styles.card}>
+        <Text style={styles.label}>帳號 (Email)</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="admin" 
+          placeholderTextColor="#666"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+        />
 
-          {/* C. 公告列表區 */}
-          {announcements.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>目前尚無公告</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={announcements}
-              renderItem={renderAnnouncementCard}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-            />
-          )}
-        </View>
-      </ScrollView>
+        <Text style={styles.label}>密碼</Text>
+        <TextInput 
+          style={styles.input} 
+          placeholder="admin" 
+          placeholderTextColor="#666"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      {/* D. 新增公告彈窗 (Modal) */}
-      <Modal
-        visible={isModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{editingId ? '編輯公告' : '新增公告'}</Text>
-            
-            {/* 標題輸入框 (TextInput) */}
-            <TextInput
-              style={styles.input}
-              placeholder="請輸入公告標題"
-              value={newTitle}
-              onChangeText={setNewTitle}
-              multiline={false}
-              autoFocus={true}
-            />
+        <TouchableOpacity style={styles.btn} onPress={handleLogin}>
+          <Text style={styles.btnText}>登入系統</Text>
+        </TouchableOpacity>
 
-            {/* 內容輸入框 (TextInput - 多行) */}
-            <TextInput
-              style={styles.contentInput}
-              placeholder="請輸入公告內容"
-              value={newContent}
-              onChangeText={setNewContent}
-              multiline={true}
-            />
+        <TouchableOpacity onPress={() => alert('請聯絡管理員重設密碼')}>
+          <Text style={styles.forgot}>忘記密碼？</Text>
+        </TouchableOpacity>
 
-            <View style={styles.modalButtons}>
-              {/* 取消按鈕 */}
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setNewTitle('');
-                  setNewContent('');
-                  setEditingId(null);
-                  setIsModalVisible(false);
-                }}
-              >
-                <Text style={styles.cancelButtonText}>取消</Text>
-              </TouchableOpacity>
-              {/* 確認發布按鈕 */}
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleSubmit}
-              >
-                <Text style={styles.confirmButtonText}>發布</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+        <View style={styles.divider} />
+
+        {/* 修正：這裡只保留一個註冊按鈕 */}
+        <TouchableOpacity onPress={handleRegister} style={styles.registerContainer}>
+          <Text style={styles.registerText}>沒有帳號？申請註冊</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  // A. 歡迎區塊樣式
-  welcomeSection: {
-    marginBottom: 32,
-  },
-  welcomeMessage: {
-    fontSize: 16,
-    color: '#374151',
-    lineHeight: 24,
-  },
-  welcomeName: {
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  // B. 公告欄標題區樣式
-  announcementSection: {
-    marginBottom: 32,
-  },
-  announcementHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  announcementTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#F3F4F6',
-  },
-  addButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111827',
-    marginLeft: 4,
-  },
-  // C. 公告列表區樣式
-  announcementCard: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  announcementContent: {
-    flex: 1,
-    marginRight: 12,
-  },
-  announcementCardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  announcementCardContent: {
-    fontSize: 14,
-    color: '#111827',
-    marginTop: 4,
-    lineHeight: 20,
-  },
-  announcementMeta: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 8,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  editButton: {
-    padding: 8,
-    marginRight: 4,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  emptyState: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  // D. 新增公告彈窗樣式
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    width: '85%',
-    maxWidth: 400,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
-    marginBottom: 16,
-  },
-  contentInput: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#111827',
-    backgroundColor: '#FFFFFF',
-    height: 100,
-    textAlignVertical: 'top',
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-  },
-  modalButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#F3F4F6',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
-  },
-  confirmButton: {
-    backgroundColor: '#111827',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
+  container: { flex: 1, backgroundColor: THEME.background, justifyContent: 'center', padding: 20 },
+  logoArea: { alignItems: 'center', marginBottom: 40 },
+  logoText: { fontSize: 32, fontWeight: 'bold', color: '#002147', marginTop: 10 }, // 配合您的截圖顏色
+  card: { backgroundColor: '#fff', padding: 30, borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  label: { fontWeight: 'bold', marginBottom: 8, color: '#333' },
+  input: { backgroundColor: '#F5F5F5', padding: 15, borderRadius: 8, marginBottom: 20, fontSize: 16, borderWidth: 1, borderColor: '#E0E0E0' },
+  btn: { backgroundColor: THEME.primary, padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  btnText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
+  forgot: { color: '#666', textAlign: 'center', marginTop: 15, textDecorationLine: 'underline' },
+  divider: { height: 1, backgroundColor: '#eee', marginVertical: 20 },
+  registerContainer: { alignItems: 'center' },
+  registerText: { color: '#002147', fontWeight: 'bold', fontSize: 16 }
 });
