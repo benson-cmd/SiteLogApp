@@ -1,4 +1,3 @@
-// FIXED_VERSION_FINAL: Personnel List
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Platform, StatusBar, Modal, Image, Alert } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,8 +7,8 @@ import { useState } from 'react';
 const THEME = { primary: '#C69C6D', background: '#F5F7FA', card: '#ffffff', headerBg: '#002147', text: '#333333' };
 
 const MOCK_PEOPLE = [
-  { id: '1', name: '吳資彬', role: '副總', phone: '0988-967-900' },
-  { id: '2', name: '陳大文', role: '現場工程師', phone: '0988-123-456' },
+  { id: '1', name: '吳資彬', role: '副總', phone: '0988-967-900', email: 'wu@dwcc.com.tw' },
+  { id: '2', name: '陳大文', role: '工地主任', phone: '0912-345-678', email: 'chen@dwcc.com.tw' },
 ];
 
 export default function PersonnelScreen() {
@@ -20,15 +19,15 @@ export default function PersonnelScreen() {
   const renderItem = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={{flexDirection:'row', alignItems:'center'}}>
-        <View style={{width:50, height:50, borderRadius:25, backgroundColor:'#eee', justifyContent:'center', alignItems:'center', marginRight:15}}>
-          <Text style={{fontSize:20, fontWeight:'bold', color:'#666'}}>{item.name[0]}</Text>
-        </View>
+        <View style={styles.avatar}><Text style={{fontSize:20, color:'#fff'}}>{item.name[0]}</Text></View>
         <View style={{flex:1}}>
-          <Text style={{fontSize:18, fontWeight:'bold', color:THEME.headerBg}}>{item.name}</Text>
-          <Text style={{color:'#666'}}>{item.role}</Text>
-          <Text style={{color:'#999'}}>{item.phone}</Text>
+          <Text style={styles.name}>{item.name} <Text style={styles.role}>{item.role}</Text></Text>
+          <Text style={styles.info}>{item.email}</Text>
+          <Text style={styles.info}>{item.phone}</Text>
         </View>
-        <TouchableOpacity onPress={() => Alert.alert('編輯', item.name)}><Ionicons name="pencil" size={20} color={THEME.primary} /></TouchableOpacity>
+        <TouchableOpacity onPress={() => Alert.alert('編輯', `編輯 ${item.name} 的資料`)}>
+          <Ionicons name="create-outline" size={24} color={THEME.primary} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -57,7 +56,9 @@ export default function PersonnelScreen() {
       <View style={styles.contentContainer}>
         <Text style={styles.pageTitle}>人員管理</Text>
         <FlatList data={MOCK_PEOPLE} keyExtractor={item => item.id} renderItem={renderItem} contentContainerStyle={styles.listContent} />
-        <TouchableOpacity style={styles.fab} onPress={() => Alert.alert('提示', '新增人員')}><Ionicons name="add" size={30} color="#fff" /></TouchableOpacity>
+        <TouchableOpacity style={styles.fab} onPress={() => Alert.alert('新增人員', '開啟新增人員表單')}>
+          <Ionicons name="add" size={30} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <Modal visible={menuVisible} animationType="fade" transparent={true} onRequestClose={() => setMenuVisible(false)}>
@@ -95,7 +96,11 @@ const styles = StyleSheet.create({
   contentContainer: { flex: 1 },
   pageTitle: { fontSize: 24, fontWeight: 'bold', color: THEME.headerBg, margin: 20 },
   listContent: { padding: 20 },
-  card: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 12, elevation: 2 },
+  card: { backgroundColor: '#fff', padding: 20, borderRadius: 12, marginBottom: 15, elevation: 2 },
+  avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#C69C6D', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  name: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  role: { fontSize: 14, color: '#C69C6D', fontWeight: 'normal' },
+  info: { color: '#666', fontSize: 13, marginTop: 2 },
   fab: { position: 'absolute', right: 20, bottom: 30, width: 60, height: 60, borderRadius: 30, backgroundColor: THEME.primary, justifyContent: 'center', alignItems: 'center', elevation: 8 },
   modalOverlay: { flex: 1, flexDirection: 'row' },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
