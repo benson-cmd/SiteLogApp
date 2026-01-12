@@ -1,87 +1,27 @@
-import { View, Text, StyleSheet, SafeAreaView, Platform, StatusBar, Modal, Image, TouchableOpacity } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useUser } from '../../context/UserContext';
-import { useState } from 'react';
-
-const THEME = { primary: '#C69C6D', background: '#F5F7FA', card: '#ffffff', headerBg: '#002147', text: '#333333' };
 
 export default function ProfileScreen() {
-  const router = useRouter();
-  const { user, logout } = useUser();
-  const [menuVisible, setMenuVisible] = useState(false);
-
-  const MenuItem = ({ icon, label, onPress, isLogout = false, isActive = false }: any) => (
-    <TouchableOpacity style={[styles.menuItem, isActive && styles.menuItemActive]} onPress={onPress}>
-      <Ionicons name={icon} size={24} color={isLogout ? '#FF6B6B' : '#fff'} />
-      <Text style={[styles.menuItemText, isLogout && { color: '#FF6B6B' }]}>{label}</Text>
-    </TouchableOpacity>
-  );
-
   return (
-    <View style={styles.mainContainer}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={styles.customHeaderSafeArea}>
-        <StatusBar barStyle="light-content" backgroundColor={THEME.headerBg} />
-        <View style={styles.customHeaderContent}>
-          <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}><Ionicons name="menu" size={32} color="#fff" /></TouchableOpacity>
-          <View style={styles.brandContainer}>
-            <Image source={require('../../assets/logo.png')} style={styles.headerLogo} resizeMode="contain" />
-            <Text style={styles.brandText}>DW工程日誌系統</Text>
-          </View>
+    <View style={{flex: 1, backgroundColor: '#F5F7FA'}}>
+      <Stack.Screen options={{ title: '我的檔案', headerStyle: { backgroundColor: '#002147' }, headerTintColor: '#fff', headerShown: true }} />
+      <ScrollView contentContainerStyle={{padding: 20}}>
+        <View style={styles.profileBox}>
+          <View style={styles.avatarLarge}><Text style={{fontSize: 40, color: '#fff'}}>吳</Text></View>
+          <Text style={{fontSize: 24, fontWeight: 'bold'}}>吳資彬</Text>
+          <Text style={{color: '#C69C6D', marginTop: 5, fontWeight:'bold'}}>副總</Text>
+          <TouchableOpacity style={styles.editBtn} onPress={() => Alert.alert('編輯資料')}>
+            <Text style={{color:'#fff', fontWeight:'bold'}}>編輯個人詳細資料</Text>
+          </TouchableOpacity>
         </View>
-      </SafeAreaView>
-
-      <View style={{flex:1, padding:20}}>
-        <Text style={{fontSize:24, fontWeight:'bold', color:THEME.headerBg, marginBottom:20}}>我的檔案</Text>
-        <View style={{backgroundColor:'#fff', padding:20, borderRadius:12, alignItems:'center'}}>
-          <View style={{width:80, height:80, borderRadius:40, backgroundColor:THEME.primary, justifyContent:'center', alignItems:'center', marginBottom:10}}>
-            <Text style={{fontSize:30, color:'#fff'}}>{user?.email?.[0] || 'U'}</Text>
-          </View>
-          <Text style={{fontSize:20, fontWeight:'bold'}}>{user?.email || 'User'}</Text>
-          <Text style={{color:'#666'}}>{user?.role}</Text>
-        </View>
-      </View>
-
-      <Modal visible={menuVisible} animationType="fade" transparent={true} onRequestClose={() => setMenuVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.sideMenu}>
-            <SafeAreaView style={{ flex: 1 }}>
-              <View style={styles.menuHeader}><Ionicons name="person-circle" size={24} color="#fff" /><Text style={styles.menuTitle}>我的檔案</Text><TouchableOpacity onPress={() => setMenuVisible(false)} style={{marginLeft:'auto'}}><Ionicons name="close" size={28} color="#fff" /></TouchableOpacity></View>
-              <View style={styles.menuDivider} />
-              <MenuItem icon="home-outline" label="首頁" onPress={() => { setMenuVisible(false); router.push('/dashboard'); }} />
-              <MenuItem icon="folder-outline" label="專案列表" onPress={() => { setMenuVisible(false); router.push('/projects'); }} />
-              <MenuItem icon="clipboard-outline" label="施工紀錄" onPress={() => { setMenuVisible(false); router.push('/logs'); }} />
-              <MenuItem icon="people-outline" label="人員管理" onPress={() => { setMenuVisible(false); router.push('/personnel'); }} />
-              <MenuItem icon="library-outline" label="SOP資料庫" onPress={() => { setMenuVisible(false); router.push('/sop'); }} />
-              <MenuItem icon="calendar-outline" label="行事曆" onPress={() => { setMenuVisible(false); router.push('/calendar'); }} />
-              <MenuItem icon="person-circle" label="我的檔案" isActive={true} onPress={() => setMenuVisible(false)} />
-              <View style={{ flex: 1 }} /><View style={styles.menuDivider} />
-              <MenuItem icon="log-out-outline" label="登出系統" isLogout onPress={() => { setMenuVisible(false); logout(); router.replace('/'); }} />
-            </SafeAreaView>
-          </View>
-          <TouchableOpacity style={styles.modalBackdrop} onPress={() => setMenuVisible(false)} />
-        </View>
-      </Modal>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  mainContainer: { flex: 1, backgroundColor: THEME.background },
-  customHeaderSafeArea: { backgroundColor: THEME.headerBg, paddingTop: Platform.OS === 'android' ? 30 : 0 },
-  customHeaderContent: { height: 60, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15 },
-  menuButton: { marginRight: 15 },
-  brandContainer: { flexDirection: 'row', alignItems: 'center' },
-  headerLogo: { width: 35, height: 35, marginRight: 10 },
-  brandText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  modalOverlay: { flex: 1, flexDirection: 'row' },
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  sideMenu: { width: 280, backgroundColor: '#002147', height: '100%', padding: 20, paddingTop: 60 },
-  menuHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  menuTitle: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginLeft: 15 },
-  menuDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 15 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, borderRadius: 8, paddingHorizontal: 10 },
-  menuItemActive: { backgroundColor: 'rgba(198, 156, 109, 0.2)' },
-  menuItemText: { fontSize: 18, marginLeft: 15, color: '#fff', fontWeight: '500' }
+  profileBox: { backgroundColor: '#fff', padding: 30, borderRadius: 20, alignItems: 'center', elevation: 3 },
+  avatarLarge: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#C69C6D', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+  editBtn: { backgroundColor:'#002147', padding: 15, borderRadius: 10, width:'100%', alignItems:'center', marginTop:20 }
 });
