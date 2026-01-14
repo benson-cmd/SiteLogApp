@@ -1,40 +1,32 @@
 import React, { createContext, useState, useContext } from 'react';
 
-type User = { email: string; role: 'admin' | 'user'; };
-
-type UserContextType = {
-  user: User | null;
-  isLoading: boolean; // 新增這個
-  login: (email: string, password?: string) => Promise<void>;
-  logout: () => void;
-};
-
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UserContext = createContext<any>(null);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const login = async (email: string, password?: string) => {
+  const login = async (email: string, pass: string) => {
     setIsLoading(true);
-    setTimeout(() => {
-      const role = (email === 'admin' || email.includes('admin')) ? 'admin' : 'user';
-      setUser({ email, role });
+    // 模擬登入延遲
+    await new Promise(resolve => setTimeout(resolve, 500));
+    // 簡易測試邏輯：只要有輸入就登入
+    if (email && pass) {
+      setUser({ email, role: 'admin' });
       setIsLoading(false);
-    }, 500);
+      return true;
+    }
+    setIsLoading(false);
+    return false;
   };
 
-  const logout = () => { setUser(null); };
+  const logout = () => setUser(null);
 
   return (
-    <UserContext.Provider value={{ user, isLoading, login, logout }}>
+    <UserContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </UserContext.Provider>
   );
 };
 
-export const useUser = () => {
-  const context = useContext(UserContext);
-  if (!context) throw new Error('useUser error');
-  return context;
-};
+export const useUser = () => useContext(UserContext);
