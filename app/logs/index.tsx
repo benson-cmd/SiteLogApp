@@ -1,23 +1,27 @@
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LogsScreen() {
-  const logs = [{ id: '1', date: '2026/01/14', project: '台中七期商辦', content: '1. 進場勘查\n2. 材料驗收' }];
+  const logs = [{ id: '1', date: '2026/01/15', project: '台中七期商辦', weather: '晴', content: '1. 基礎混凝土澆置完成' }];
+
   return (
     <View style={{flex: 1, backgroundColor: '#F5F7FA'}}>
       <Stack.Screen options={{ title: '施工紀錄', headerShown: true, headerStyle: { backgroundColor: '#002147' }, headerTintColor: '#fff' }} />
-      <FlatList data={logs} renderItem={({item}) => (
-        <View style={styles.card}>
-          <View style={{flexDirection:'row', justifyContent:'space-between'}}>
-            <Text style={{fontWeight:'bold', color:'#666'}}>{item.date}</Text>
-            <TouchableOpacity onPress={() => Alert.alert('編輯', '修改施工紀錄')}><Ionicons name="pencil" size={20} color="#C69C6D" /></TouchableOpacity>
+      <FlatList 
+        data={logs}
+        renderItem={({item}) => (
+          <View style={styles.card}>
+            <View style={{flexDirection:'row', justifyContent:'space-between'}}>
+              <Text style={{fontWeight:'bold', color:'#666'}}>{item.date} | {item.weather}</Text>
+              <TouchableOpacity onPress={() => Alert.alert('管理', '編輯紀錄')}><Ionicons name="pencil" size={20} color="#C69C6D" /></TouchableOpacity>
+            </View>
+            <Text style={{fontSize:18, fontWeight:'bold', color:'#002147', marginVertical:8}}>{item.project}</Text>
+            <Text style={{color:'#444'}}>{item.content}</Text>
           </View>
-          <Text style={{fontSize:18, fontWeight:'bold', color:'#002147', marginVertical:8}}>{item.project}</Text>
-          <Text style={{color:'#444'}}>{item.content}</Text>
-        </View>
-      )} />
-      <TouchableOpacity style={styles.fab} onPress={() => Alert.alert('新增', '填寫新日誌')}><Ionicons name="add" size={30} color="#fff" /></TouchableOpacity>
+        )}
+      />
+      <TouchableOpacity style={styles.fab} onPress={() => Alert.alert('新增紀錄', '開啟施工日誌表單')}><Ionicons name="add" size={30} color="#fff" /></TouchableOpacity>
     </View>
   );
 }
